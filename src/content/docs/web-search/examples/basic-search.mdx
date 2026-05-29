@@ -12,7 +12,12 @@ import { Tabs, TabItem, TypeScriptExample } from "~/components";
 
 The most common Web Search pattern: send a query and get back a list of result URLs with metadata. This is the foundation for all other workflows in this section.
 
-The [`search()` method](/web-search/get-started/#workers-binding) (Workers Binding) and [`/websearch/search` endpoint](/web-search/get-started/#rest-api) (REST API) return up to 20 result items per query. Each item always includes a URL and title. Other fields (description, image URL, favicon, and last-modified date) are returned when the indexed page exposes that metadata. Use the `limit` parameter to control how many results you receive (default 10, maximum 20).
+You can call Web Search in two ways:
+
+- **[Workers Binding](/web-search/get-started/#workers-binding)**: call `env.WEBSEARCH.search()` directly from a Worker. Authentication is automatic.
+- **[REST API](/web-search/get-started/#rest-api)**: send a `POST` request to `/websearch/search`. Requires an API token.
+
+The only required parameter is `query`. Optionally pass `limit` to control how many results you get back (min 1, default 10, max 20). Each result always includes a URL and title. Other fields (description, image URL, favicon, and last-modified date) are returned when the indexed page exposes that metadata. For the full request and response schema, refer to [Get started](/web-search/get-started/#request-parameters).
 
 <Tabs syncKey="integration">
 <TabItem label="REST API">

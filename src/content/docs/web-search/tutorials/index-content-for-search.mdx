@@ -1,0 +1,229 @@
+---
+title: Index web content into AI Search
+pcx_content_type: tutorial
+description: Build a Worker that searches the web, fetches page content with Browser Run, and uploads it to AI Search for retrieval.
+sidebar:
+  order: 8
+difficulty: Intermediate
+products:
+  - web-search
+  - browser-run
+  - ai-search
+head:
+  - tag: title
+    content: "Tutorial: Index web content into AI Search"
+---
+
+import {
+	DashButton,
+	PackageManagers,
+	TypeScriptExample,
+	WranglerConfig,
+	Steps,
+} from "~/components";
+
+In this tutorial, you will build a [Worker](/workers/) that discovers pages on a topic using Web Search, fetches their content with [Browser Run](/browser-run/), and uploads it to an [AI Search](/ai-search/) instance so you can query it later with natural language.
+
+This is useful when you want to build a knowledge base from public web content. For example, you could index documentation from several sources into one searchable collection, or build a research corpus on a topic that your agents can query.
+
+## What you will build
+
+An indexing endpoint that:
+
+1. Accepts a topic as input
+2. Searches the web for relevant pages
+3. Fetches markdown content from each result using Browser Run
+4. Uploads each page to AI Search built-in storage for indexing
+
+Once indexed, you can query the content using the [AI Search API](/ai-search/api/search/workers-binding/).
+
+## Prerequisites
+
+- A [Cloudflare account](https://dash.cloudflare.com/sign-up) with a Workers Paid plan
+- An [AI Search instance](/ai-search/get-started/) with built-in storage (instances created after April 16, 2026 include this automatically)
+
+Create a new project if you do not have one:
+
+<PackageManagers type="create" pkg="cloudflare@latest" args="web-index-pipeline" />
+
+## 1. Configure bindings
+
+Your Worker needs three bindings: Web Search for discovery, Browser Run for content fetching, and AI Search for storage and indexing.
+
+<WranglerConfig>
+
+```toml
+name = "web-index-pipeline"
+main = "src/index.ts"
+compatibility_date = "$today"
+
+[web_search]
+binding = "WEBSEARCH"
+
+[browser]
+binding = "BROWSER"
+
+[[ai_search_namespaces]]
+binding = "AI_SEARCH"
+namespace = "default"
+```
+
+</WranglerConfig>
+
+:::note
+The `ai_search_namespaces` binding gives you access to all AI Search instances in a namespace. You will call `env.AI_SEARCH.get("your-instance-id")` to get a handle to a specific instance. Make sure your instance has [built-in storage](/ai-search/configuration/data-source/built-in-storage/) enabled.
+:::
+
+## 2. Build the indexing pipeline
+
+The Worker searches for a topic, fetches content from the top results, and uploads each page to AI Search.
+
+<TypeScriptExample>
+
+```ts
+export default {
+	async fetch(request, env): Promise<Response> {
+		const url = new URL(request.url);
+		const topic = url.searchParams.get("topic");
+		const instanceId = url.searchParams.get("instance") ?? "web-content";
+
+		if (!topic) {
+			return new Response("Missing ?topic= parameter", { status: 400 });
+		}
+
+		try {
+			// Step 1: Discover relevant URLs
+			const { items } = await env.WEBSEARCH.search({
+				query: topic,
+				limit: 10,
+			});
+
+			if (items.length === 0) {
+				return Response.json({ indexed: 0, message: "No results found" });
+			}
+
+			// Step 2: Fetch markdown content from each page
+			const pages = await Promise.all(
+				items.slice(0, 5).map(async (r) => {
+					try {
+						const response = await env.BROWSER.quickAction("markdown", {
+							url: r.url,
+						});
+						const content = await response.text();
+						return { title: r.title, url: r.url, content };
+					} catch {
+						return { title: r.title, url: r.url, content: "" };
+					}
+				}),
+			);
+
+			const validPages = pages.filter((p) => p.content.length > 0);
+
+			if (validPages.length === 0) {
+				return Response.json({
+					indexed: 0,
+					message: "Could not fetch content from any results",
+				});
+			}
+
+			// Step 3: Upload each page to AI Search
+			const instance = env.AI_SEARCH.get(instanceId);
+
+			const results = await Promise.all(
+				validPages.map(async (page) => {
+					try {
+						// Create a filename from the URL
+						const filename =
+							page.url
+								.replace(/^https?:\/\//, "")
+								.replace(/[^a-zA-Z0-9]/g, "-")
+								.slice(0, 100) + ".md";
+
+						// Add the title and source URL as a header
+						const content = `# ${page.title}\n\nSource: ${page.url}\n\n${page.content}`;
+
+						await instance.items.upload(filename, content);
+						return { url: page.url, status: "indexed" };
+					} catch (e) {
+						return { url: page.url, status: "failed", error: String(e) };
+					}
+				}),
+			);
+
+			return Response.json({
+				topic,
+				instance: instanceId,
+				indexed: results.filter((r) => r.status === "indexed").length,
+				results,
+			});
+		} catch (e) {
+			return Response.json({ error: String(e) }, { status: 500 });
+		}
+	},
+} satisfies ExportedHandler<Env>;
+```
+
+</TypeScriptExample>
+
+## 3. Create an AI Search instance
+
+Before running the Worker, create an AI Search instance to upload content to. You can do this from the dashboard or from a Worker.
+
+From the dashboard, go to **AI** > **AI Search** and create a new instance. Note the instance ID.
+
+<DashButton url="/?to=/:account/ai/ai-search" />
+
+Or create one programmatically:
+
+```ts
+const instance = await env.AI_SEARCH.create({
+	id: "web-content",
+});
+```
+
+## 4. Test locally
+
+<Steps>
+
+1. Start the development server:
+
+	<PackageManagers type="exec" pkg="wrangler" args="dev" />
+
+2. Index some content:
+
+	```bash
+	curl "http://localhost:8787/?topic=Cloudflare+Workers+tutorials&instance=web-content"
+	```
+
+3. The response shows which pages were indexed:
+
+	```json
+	{
+		"topic": "Cloudflare Workers tutorials",
+		"instance": "web-content",
+		"indexed": 4,
+		"results": [
+			{ "url": "https://developers.cloudflare.com/workers/tutorials/", "status": "indexed" },
+			{ "url": "https://developers.cloudflare.com/workers/get-started/guide/", "status": "indexed" }
+		]
+	}
+	```
+
+4. Query the indexed content using the [AI Search API](/ai-search/api/search/workers-binding/):
+
+	```ts
+	const instance = env.AI_SEARCH.get("web-content");
+	const results = await instance.search("how do I set up routing in Workers?");
+	```
+
+</Steps>
+
+## 5. Deploy
+
+<PackageManagers type="exec" pkg="wrangler" args="deploy" />
+
+## Next steps
+
+- Add [metadata filtering](/ai-search/configuration/indexing/metadata/) to tag indexed pages by topic, source domain, or date
+- Schedule periodic re-indexing using [Cron Triggers](/workers/configuration/cron-triggers/) to keep content fresh
+- Combine with the [Build a web research agent](/web-search/tutorials/agent-web-research/) tutorial to build an agent that indexes and queries in one flow

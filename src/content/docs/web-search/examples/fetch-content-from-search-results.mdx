@@ -11,7 +11,19 @@ products:
 
 import { Tabs, TabItem, TypeScriptExample } from "~/components";
 
-Web Search returns URLs and metadata. To work with the actual page content, pair it with [Browser Run](/browser-run/). The examples below show two common output formats.
+Web Search returns URLs and metadata. To work with the actual page content, pair it with [Browser Run](/browser-run/). Pass any result URL to a [Browser Run Quick Action](/browser-run/quick-actions/) to:
+
+- [`/markdown`](/browser-run/quick-actions/markdown-endpoint/): convert a page to clean markdown, good for feeding into an LLM
+- [`/content`](/browser-run/quick-actions/content-endpoint/): get fully rendered HTML, including content loaded by JavaScript
+- [`/json`](/browser-run/quick-actions/json-endpoint/): extract structured data using an AI prompt and schema. Refer to [Search and extract structured data](/web-search/examples/search-and-extract-structured-data/) for an example.
+- [`/screenshot`](/browser-run/quick-actions/screenshot-endpoint/): capture a screenshot of the page
+- [`/pdf`](/browser-run/quick-actions/pdf-endpoint/): generate a PDF
+- [`/scrape`](/browser-run/quick-actions/scrape-endpoint/): extract data from specific elements using CSS selectors
+- [`/links`](/browser-run/quick-actions/links-endpoint/): extract all links from a page
+- [`/snapshot`](/browser-run/quick-actions/snapshot/): capture both HTML and a screenshot in a single request
+- [`/crawl`](/browser-run/quick-actions/crawl-endpoint/): scrape a page and follow its links across the site
+
+The pattern is the same for all of them: search with Web Search, then pass each result URL to the Quick Action you need. The examples below show the two most common formats: markdown and HTML.
 
 ## Get markdown
 
@@ -155,16 +167,4 @@ export default {
 </TabItem>
 </Tabs>
 
-## Other Browser Run Quick Actions
 
-Markdown and HTML are two output formats. [Browser Run Quick Actions](/browser-run/quick-actions/) offers several others that pair well with Web Search results:
-
-- [`/json`](/browser-run/quick-actions/json-endpoint/): extract structured JSON data using an AI prompt and schema. Refer to [Search and extract structured data](/web-search/examples/search-and-extract-structured-data/) for an example.
-- [`/screenshot`](/browser-run/quick-actions/screenshot-endpoint/): capture a screenshot of each result page.
-- [`/pdf`](/browser-run/quick-actions/pdf-endpoint/): generate a PDF of each result page.
-- [`/scrape`](/browser-run/quick-actions/scrape-endpoint/): extract data from specific elements using CSS selectors.
-- [`/links`](/browser-run/quick-actions/links-endpoint/): extract all links from a page, including hidden ones.
-- [`/snapshot`](/browser-run/quick-actions/snapshot/): capture both HTML and a screenshot in a single request.
-- [`/crawl`](/browser-run/quick-actions/crawl-endpoint/): scrape a page and follow its links across the site, with configurable depth.
-
-The same pattern shown above applies: search with Web Search, then pass each result URL to the Quick Action of your choice.

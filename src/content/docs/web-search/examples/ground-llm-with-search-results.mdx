@@ -11,7 +11,11 @@ products:
 
 import { Tabs, TabItem } from "~/components";
 
-Pass search results to a model as context so it can answer using current information from the web. This is the most common pattern for grounding LLM responses with real-time data.
+This example passes search result metadata (titles, URLs, and descriptions) directly to a model as context. The LLM can use this to produce a response grounded in real-time search results, with citations back to the source URLs.
+
+This is the lightweight version of grounding: no page content is fetched, so it is fast and uses no [Browser Run](/browser-run/) quota. The tradeoff is that the LLM only sees short descriptions, not full articles. For queries where titles and snippets provide enough signal (trending topics, factual lookups, news summaries), this works well.
+
+For deeper grounding where the LLM needs to read full page content, add a [Browser Run](/browser-run/) fetch step between search and the LLM call. The [Build a web research agent](/web-search/tutorials/agent-web-research/) tutorial shows this full pattern.
 
 <Tabs syncKey="integration">
 <TabItem label="REST API">
