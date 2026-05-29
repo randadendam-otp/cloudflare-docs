@@ -4,7 +4,6 @@ pcx_content_type: how-to
 description: Add web search as a tool to Cloudflare Agents using the webSearchTool() factory from @cloudflare/websearch.
 sidebar:
   order: 2
-  badge: Beta
 head:
   - tag: title
     content: Use Web Search with the Agents SDK
@@ -16,7 +15,7 @@ The same `webSearchTool()` factory from `@cloudflare/websearch` works inside [Cl
 
 ## Set up bindings
 
-Your Worker needs the `web_search` binding alongside your agent's other bindings:
+Your [Worker](/workers/) needs the `web_search` binding alongside your agent's other bindings:
 
 <WranglerConfig>
 

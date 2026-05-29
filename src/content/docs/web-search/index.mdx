@@ -17,7 +17,6 @@ tags:
 import {
 	CardGrid,
 	Description,
-	Feature,
 	LinkTitleCard,
 	Plan,
 	RelatedProduct,
@@ -31,10 +30,6 @@ Give your agents real-time access to the web.
 
 <Plan type="workers-all" />
 
-:::note
-Cloudflare Web Search is currently in beta. Features and APIs may change before general availability.
-:::
-
 {/* TODO: Update /web-search/mcp-server/ link once the web-search-specific MCP server page exists */}
 Web Search is a search API that returns URLs and metadata for any query. Use it from a [Workers Binding](/web-search/get-started/#workers-binding), the [REST API](/web-search/get-started/#rest-api), or any [MCP client](/web-search/mcp-server/).
 
@@ -47,26 +42,17 @@ Web Search is a search API that returns URLs and metadata for any query. Use it 
 
 ## Key features
 
-<Feature header="Composable" href="/web-search/examples/">
-
-Returns URLs and metadata. Pair with [Browser Run](/browser-run/) to fetch full content, extract structured data, or take screenshots of any result.
-
-</Feature>
-
-<Feature header="Agent-ready" href="/web-search/ai-integration/">
-
 {/* TODO: Update /web-search/mcp-server/ link once the web-search-specific MCP server page exists */}
-Drop-in tools for the [Agents SDK](/web-search/ai-integration/agents-sdk/), [MCP](/web-search/mcp-server/), and [AI SDK](/web-search/ai-integration/ai-sdk/). Works out of the box with popular AI frameworks.
 
-</Feature>
+- **Composable**: Returns URLs and metadata only. Pair with [Browser Run](/browser-run/) to fetch full content, extract structured data, or take screenshots of any result
+- **Agent-ready**: Drop-in tools for the [Agents SDK](/web-search/ai-integration/agents-sdk/), [MCP](/web-search/mcp-server/), and [AI SDK](/web-search/ai-integration/ai-sdk/) that work with popular AI frameworks
+- **Multiple integration paths**: Use Web Search from a [Workers Binding](/web-search/get-started/#workers-binding), the [REST API](/web-search/get-started/#rest-api), or any [MCP client](/web-search/mcp-server/)
 
 ---
 
 ## Web Search vs AI Search
 
-Web Search and [AI Search](/ai-search/) are different products for different jobs. Web Search discovers URLs on the public web: you provide a query, and it returns matching pages from across the Internet. AI Search searches specific content you define: you choose what to index, and it provides retrieval over those documents.
-
-Use Web Search when your agent needs real-time information from the open web. Use AI Search when you need retrieval over specific content you define.
+Web Search and [AI Search](/ai-search/) are different products for different jobs. Web Search discovers URLs on the public web. AI Search searches specific content you define. Refer to [Discovery and content retrieval](/web-search/concepts/how-web-search-works/#web-search-vs-ai-search) for a detailed comparison.
 
 ---
 
@@ -93,18 +79,6 @@ Build AI-powered agents with persistent state, tool use, and real-time communica
 <RelatedProduct header="Workers AI" href="/workers-ai/" product="workers-ai">
 
 Run machine learning models, powered by serverless GPUs, on Cloudflare's global network.
-
-</RelatedProduct>
-
-<RelatedProduct header="Workers" href="/workers/" product="workers">
-
-Build serverless applications and deploy instantly across the globe for exceptional performance, reliability, and scale.
-
-</RelatedProduct>
-
-<RelatedProduct header="AI Gateway" href="/ai-gateway/" product="ai-gateway">
-
-Observe and control your AI applications with caching, rate limiting, request retries, model fallback, and more.
 
 </RelatedProduct>
 

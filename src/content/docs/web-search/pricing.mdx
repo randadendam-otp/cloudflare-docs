@@ -4,7 +4,6 @@ pcx_content_type: reference
 description: Web Search pricing for Workers Free and Workers Paid plans.
 sidebar:
   order: 10
-  badge: Beta
 head:
   - tag: title
     content: Web Search pricing
@@ -19,14 +18,10 @@ Web Search is billed per query. Each call to `search()` or the REST API counts a
 | Plan               | Workers Free    | Workers Paid            |
 | ------------------ | --------------- | ----------------------- |
 | Included queries   | 1,000 per month | 3,000 per month         |
-| Additional queries | Not available   | $5.00 per 1,000 queries |
+| Additional queries | N/A - Upgrade to Workers Paid | $5.00 per 1,000 queries |
 
-Included queries reset at the start of each monthly billing cycle. On the Workers Free plan, queries beyond the included amount are rejected until the next billing period. On the Workers Paid plan, additional queries are billed at the overage rate.
+Included queries reset at the start of each monthly billing cycle. On the [Workers Free](/workers/platform/pricing/#workers) plan, queries beyond the included amount are rejected until the next billing period. On the [Workers Paid](/workers/platform/pricing/#workers) plan, additional queries are billed at the overage rate.
 
 To view or change your plan, go to the **Workers plans** page in the Cloudflare dashboard:
 
 <DashButton url="/?to=/:account/workers/plans" />
-
-## Related
-
-- [Limits](/web-search/limits/)

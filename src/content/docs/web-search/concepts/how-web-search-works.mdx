@@ -1,13 +1,12 @@
 ---
-title: How Web Search works
+title: Discovery and content retrieval
 pcx_content_type: concept
 description: Understand Web Search's discovery-only design, the search-then-fetch workflow, and how it differs from AI Search.
 sidebar:
   order: 3
-  badge: Beta
 head:
   - tag: title
-    content: How Web Search works
+    content: Discovery and content retrieval
 ---
 
 Web Search is a discovery API. It takes a query and returns a list of URLs that match, along with metadata like titles and descriptions. It does not return page content.
@@ -19,43 +18,32 @@ This design is intentional. Discovery and content retrieval are separate steps, 
 A typical workflow with Web Search has two steps:
 
 1. Search (Web Search): find relevant URLs for a query
-2. Fetch (Browser Run or `fetch()`): get the content of the pages you want
+2. Fetch ([Browser Run](/browser-run/)): get the content of the pages you want
 
-```
-Query → Web Search → URLs + metadata
-                         ↓
-                    Pick best results
-                         ↓
-              Browser Run / fetch() → Full page content
-                         ↓
-                    Process content
+```mermaid
+flowchart TD
+    A[Query] --> B[Web Search]
+    B --> C[URLs + metadata]
+    C --> D[Pick best results]
+    D --> E[Browser Run]
+    E --> F[Full page content]
+    F --> G[Process content]
 ```
 
 For example, an agent researching a topic would:
 
-1. Call `env.WEBSEARCH.search({ query: "topic" })` to discover relevant pages
+1. Search for "topic" to get back a list of relevant URLs and metadata
 2. Evaluate the returned titles and descriptions to decide which pages are worth reading
-3. Fetch content from selected URLs using [Browser Run](/browser-run/) (for rendered HTML, markdown, structured data) or `fetch()` (for simple HTTP requests)
+3. Fetch content from selected URLs using [Browser Run](/browser-run/) for rendered HTML, markdown, structured data, or screenshots
 4. Process the content with an LLM or extract specific data
 
 This composable approach means you choose the right tool for content retrieval. Use [Browser Run /markdown](/browser-run/quick-actions/markdown-endpoint/) for clean text, [/json](/browser-run/quick-actions/json-endpoint/) for structured extraction, or [/screenshot](/browser-run/quick-actions/screenshot-endpoint/) for visual captures.
 
 ## What is in a search result
 
-Each result contains metadata about the page, not the page content itself:
+Each result contains metadata about the page. Guaranteed fields include `url` and `title`. Optional fields include description, image, favicon, and last modified date, which depend on what metadata the indexed page exposes. Web Search does not return page content.
 
-| Field              | Description                                                      |
-| ------------------ | ---------------------------------------------------------------- |
-| `url`              | The canonical URL of the page                                    |
-| `title`            | The page title                                                   |
-| `description`      | Page-level description (from the page's meta tags), if available |
-| `summary`          | A summary of the page contents, if available                     |
-| `authors`          | Author names associated with the page                            |
-| `imageUrl`         | Preview image URL (OpenGraph or similar)                         |
-| `faviconUrl`       | Favicon URL for the page's domain                                |
-| `lastModifiedDate` | When the page was last modified (ISO-8601)                       |
-
-This metadata is enough for an agent to assess relevance and decide which pages to fetch.
+This metadata is enough for an agent to assess relevance and decide which pages to fetch. Refer to [Result fields](/web-search/get-started/#result-fields) for the full schema.
 
 ## Web Search vs AI Search
 
@@ -64,7 +52,7 @@ Web Search and [AI Search](/ai-search/) serve different purposes:
 | Aspect               | Web Search                                  | AI Search                                  |
 | -------------------- | ------------------------------------------- | ------------------------------------------ |
 | **What it searches** | The public web                              | Specific content you define                |
-| **Setup**            | Add one binding                             | Create an instance, index your content     |
+| **Setup**            | Add a binding or call the REST API          | Create an instance, then index your content |
 | **Use case**         | Find information on the open internet       | Retrieval over specific content you define |
 | **Content**          | Returns URLs (you fetch content separately) | Returns indexed content directly           |
 

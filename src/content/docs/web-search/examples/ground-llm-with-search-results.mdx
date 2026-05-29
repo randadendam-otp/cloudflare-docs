@@ -1,0 +1,75 @@
+---
+title: Ground LLM responses with search results
+pcx_content_type: example
+description: Pass Web Search results to a model as context so it can answer using current information from the web.
+sidebar:
+  order: 4
+products:
+  - web-search
+  - workers-ai
+---
+
+import { Tabs, TabItem } from "~/components";
+
+Pass search results to a model as context so it can answer using current information from the web. This is the most common pattern for grounding LLM responses with real-time data.
+
+<Tabs syncKey="integration">
+<TabItem label="REST API">
+
+```bash
+# 1. Search the web
+RESULTS=$(curl -s -X POST \
+  https://api.cloudflare.com/client/v4/accounts/{account_id}/websearch/search \
+  -H "Authorization: Bearer {API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Cloudflare Q1 2026 earnings",
+    "limit": 5
+  }')
+
+# 2. Build context from the results and pass it to Workers AI
+CONTEXT=$(echo $RESULTS | jq -r '.result.items | to_entries | map("[\(.key + 1)] \(.value.title)\n\(.value.url)\n\(.value.description)") | join("\n\n")')
+
+curl -X POST \
+  https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/@cf/meta/llama-3.3-70b-instruct \
+  -H "Authorization: Bearer {API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "$(jq -n --arg ctx "$CONTEXT" '{
+    messages: [
+      {role: "system", content: "Answer the user using these search results. Cite sources by number.\n\n\($ctx)"},
+      {role: "user", content: "Cloudflare Q1 2026 earnings"}
+    ]
+  }')"
+```
+
+</TabItem>
+<TabItem label="Workers Binding">
+
+```ts
+export default {
+	async fetch(request, env): Promise<Response> {
+		const query = "Cloudflare Q1 2026 earnings";
+
+		const { items } = await env.WEBSEARCH.search({ query, limit: 5 });
+
+		const context = items
+			.map((r, i) => `[${i + 1}] ${r.title}\n${r.url}\n${r.description}`)
+			.join("\n\n");
+
+		const answer = await env.AI.run("@cf/meta/llama-3.3-70b-instruct", {
+			messages: [
+				{
+					role: "system",
+					content: `Answer the user using these search results. Cite sources by number.\n\n${context}`,
+				},
+				{ role: "user", content: query },
+			],
+		});
+
+		return Response.json({ answer, sources: items });
+	},
+} satisfies ExportedHandler<Env>;
+```
+
+</TabItem>
+</Tabs>

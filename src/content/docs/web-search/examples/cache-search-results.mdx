@@ -1,0 +1,46 @@
+---
+title: Cache search results
+pcx_content_type: example
+description: Cache Web Search responses with the Workers Cache API to reduce query volume and latency for common queries.
+sidebar:
+  order: 5
+products:
+  - web-search
+---
+
+import { TypeScriptExample } from "~/components";
+
+Search results for common queries change slowly. Cache responses with the [Workers Cache API](/workers/runtime-apis/cache/) to reduce query volume and latency:
+
+<TypeScriptExample>
+
+```ts
+export default {
+	async fetch(request, env, ctx): Promise<Response> {
+		const url = new URL(request.url);
+		const query = url.searchParams.get("q");
+		if (!query) return new Response("Missing ?q= parameter", { status: 400 });
+
+		const cacheKey = new Request(
+			`https://cache.example.com/search?q=${encodeURIComponent(query)}`,
+		);
+		const cache = caches.default;
+
+		const cached = await cache.match(cacheKey);
+		if (cached) return cached;
+
+		const { items } = await env.WEBSEARCH.search({ query, limit: 10 });
+
+		const response = Response.json(items, {
+			headers: { "cache-control": "public, s-maxage=3600" },
+		});
+
+		ctx.waitUntil(cache.put(cacheKey, response.clone()));
+		return response;
+	},
+} satisfies ExportedHandler<Env>;
+```
+
+</TypeScriptExample>
+
+The `s-maxage=3600` directive caches results for one hour. Adjust based on how fresh your application needs results to be. From the REST API, manage caching at your own layer using [Workers KV](/kv/) or a similar store with a TTL.

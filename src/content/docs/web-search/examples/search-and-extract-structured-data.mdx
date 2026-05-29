@@ -1,0 +1,99 @@
+---
+title: Search and extract structured data
+pcx_content_type: example
+description: Combine Web Search with Browser Run /json to extract structured data from web pages found by a query.
+sidebar:
+  order: 3
+products:
+  - web-search
+  - browser-run
+---
+
+import { Tabs, TabItem, TypeScriptExample } from "~/components";
+
+Search for URLs, then use [Browser Run /json](/browser-run/quick-actions/json-endpoint/) to extract structured data from the top results. This is the pattern for "search and enrich" workflows. Start with a topic or a list of items, find relevant pages, then pull out structured facts you can store, display, or feed into another system.
+
+<Tabs syncKey="integration">
+<TabItem label="REST API">
+
+```bash
+# 1. Search for relevant pages
+RESULTS=$(curl -s -X POST \
+  https://api.cloudflare.com/client/v4/accounts/{account_id}/websearch/search \
+  -H "Authorization: Bearer {API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Cloudflare AI products",
+    "limit": 5
+  }')
+
+# 2. Extract structured data from the first result using Browser Run /json
+URL=$(echo $RESULTS | jq -r '.result.items[0].url')
+
+curl -X POST \
+  https://api.cloudflare.com/client/v4/accounts/{account_id}/browser-rendering/json \
+  -H "Authorization: Bearer {API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "'"$URL"'",
+    "prompt": "Extract product information",
+    "response_format": {
+      "type": "json_schema",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "product_name": { "type": "string" },
+          "description": { "type": "string" },
+          "use_case": { "type": "string" }
+        }
+      }
+    }
+  }'
+```
+
+</TabItem>
+<TabItem label="Workers Binding">
+
+<TypeScriptExample>
+
+```ts
+export default {
+	async fetch(request, env): Promise<Response> {
+		// 1. Search for relevant pages
+		const { items } = await env.WEBSEARCH.search({
+			query: "Cloudflare AI products",
+			limit: 5,
+		});
+
+		// 2. Extract structured data from each result using Browser Run /json
+		const extracted = await Promise.all(
+			items.map(async (r) => {
+				const response = await env.BROWSER.quickAction("json", {
+					url: r.url,
+					prompt: "Extract product information",
+					response_format: {
+						type: "json_schema",
+						schema: {
+							type: "object",
+							properties: {
+								product_name: { type: "string" },
+								description: { type: "string" },
+								use_case: { type: "string" },
+							},
+						},
+					},
+				});
+				const data = await response.json();
+				return { source: r.url, data };
+			}),
+		);
+
+		return Response.json(extracted);
+	},
+} satisfies ExportedHandler<Env>;
+```
+
+</TypeScriptExample>
+
+</TabItem>
+</Tabs>

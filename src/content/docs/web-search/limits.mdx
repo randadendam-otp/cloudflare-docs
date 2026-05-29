@@ -4,15 +4,21 @@ pcx_content_type: reference
 description: Learn about the limits associated with Web Search.
 sidebar:
   order: 11
-  badge: Beta
 head:
   - tag: title
     content: Web Search limits
 ---
 
+import { Tabs, TabItem } from "~/components";
+
 Web Search limits are based on your [Cloudflare Workers plan](/workers/platform/pricing/).
 
 For pricing information, refer to [Web Search pricing](/web-search/pricing/).
+
+{/* TODO: Replace forms.gle URL with the Web Search limit increase form once it exists. */}
+:::note[Need higher limits?]
+The limits below are defaults for Workers Paid users. If you need to scale beyond them, Cloudflare can increase your account limits. [Request higher limits](https://forms.gle/TODO).
+:::
 
 | Limit                           | Value            |
 | ------------------------------- | ---------------- |
@@ -21,6 +27,67 @@ For pricing information, refer to [Web Search pricing](/web-search/pricing/).
 | Default results per query       | 10               |
 | Max query length                | 1,024 characters |
 
-## Related
+## Troubleshooting
 
-- [Pricing](/web-search/pricing/)
+### Error: `429 Too many requests`
+
+When you exceed the per-second rate limit, Web Search responds with HTTP status code `429 Too many requests`. Rate limits are based on your [Workers plan](/workers/platform/pricing/).
+
+The example below shows how to handle rate limiting gracefully by reading the `Retry-After` header and retrying the request after the indicated delay. If the header is missing, the example falls back to exponential backoff.
+
+<Tabs syncKey="integration">
+<TabItem label="Workers Binding">
+
+```ts
+async function searchWithRetry(env: Env, query: string, attempts = 3) {
+	for (let i = 0; i < attempts; i++) {
+		try {
+			return await env.WEBSEARCH.search({ query, limit: 5 });
+		} catch (error: any) {
+			if (error.status !== 429 || i === attempts - 1) throw error;
+			const retryAfter =
+				Number(error.headers?.get("Retry-After")) || 2 ** i;
+			console.log(
+				`Rate limited. Waiting ${retryAfter}s before retry ${i + 1}.`,
+			);
+			await new Promise((resolve) =>
+				setTimeout(resolve, retryAfter * 1000),
+			);
+		}
+	}
+}
+```
+
+</TabItem>
+<TabItem label="REST API">
+
+```ts
+async function searchWithRetry(query: string, attempts = 3) {
+	for (let i = 0; i < attempts; i++) {
+		const response = await fetch(
+			"https://api.cloudflare.com/client/v4/accounts/<accountId>/websearch/search",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: "Bearer <your-token>",
+				},
+				body: JSON.stringify({ query, limit: 5 }),
+			},
+		);
+
+		if (response.status !== 429) return response;
+		if (i === attempts - 1) return response;
+
+		const retryAfter =
+			Number(response.headers.get("Retry-After")) || 2 ** i;
+		console.log(
+			`Rate limited. Waiting ${retryAfter}s before retry ${i + 1}.`,
+		);
+		await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+	}
+}
+```
+
+</TabItem>
+</Tabs>

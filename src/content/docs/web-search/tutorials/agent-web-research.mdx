@@ -4,7 +4,6 @@ pcx_content_type: tutorial
 description: Build a Worker that searches the web, fetches content from multiple sources using Browser Run, and synthesizes a research briefing with Workers AI.
 sidebar:
   order: 7
-  badge: Beta
 difficulty: Intermediate
 products:
   - web-search
@@ -15,6 +14,8 @@ head:
     content: "Tutorial: Build a web research agent"
 ---
 
+{/* TODO: Anni to replace this tutorial with the version she built */}
+
 import {
 	PackageManagers,
 	TypeScriptExample,
@@ -22,7 +23,7 @@ import {
 	Steps,
 } from "~/components";
 
-In this tutorial, you will build a Worker that searches the web for a topic, fetches content from the most relevant results using Browser Run, and uses Workers AI to synthesize a research briefing across multiple sources.
+In this tutorial, you will build a [Worker](/workers/) that searches the web for a topic, fetches content from the most relevant results using [Browser Run](/browser-run/), and uses [Workers AI](/workers-ai/) to synthesize a research briefing across multiple sources.
 
 This is different from using [Browser Run /json](/browser-run/quick-actions/json-endpoint/) on a single URL. Here, the agent does not know any URLs upfront. It discovers them, decides which are worth reading, fetches multiple pages, and produces a synthesis that draws on all of them.
 

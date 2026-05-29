@@ -4,8 +4,6 @@ productName: Web Search
 productLink: "/web-search/"
 entries:
   - publish_date: "2026-12-30"
-    title: "Web Search beta launch"
+    title: "Web Search Beta"
     description: |-
-      * Cloudflare Web Search is now available in beta. Web Search is a search API that gives your agents real-time access to the public web.
-      * Use it from a [Workers Binding](/web-search/get-started/#workers-binding), the [REST API](/web-search/get-started/#rest-api), or any [MCP client](/web-search/mcp-server/).
-      * Add web search as a tool in [Agents SDK](/web-search/ai-integration/agents-sdk/#add-web-search-to-a-chat-agent) or [AI SDK](/web-search/ai-integration/ai-sdk/#use-websearchtool) applications using `webSearchTool()` from `@cloudflare/websearch`.
+      * Cloudflare Web Search is now available in open beta. Web Search is a search API that gives your agents real-time access to the public web. Refer to the [Web Search docs](/web-search/) to get started.

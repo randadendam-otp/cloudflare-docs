@@ -4,14 +4,12 @@ pcx_content_type: get-started
 description: Set up Web Search and run your first query using a Workers Binding or the REST API.
 sidebar:
   order: 2
-  badge: Beta
 head:
   - tag: title
     content: Get started with Web Search
 ---
 
 import {
-	APIRequest,
 	PackageManagers,
 	TypeScriptExample,
 	WranglerConfig,
@@ -90,28 +88,31 @@ If you do not have a Workers project yet, create one:
 ### Prerequisites
 
 - A [Cloudflare account](https://dash.cloudflare.com/sign-up)
-- An [API token](https://dash.cloudflare.com/profile/api-tokens) with the **Web Search Read** permission
+- An [API token](https://dash.cloudflare.com/profile/api-tokens) with the **Web Search Run** permission
 
 ### Send a request
 
 Send a `POST` request to the Web Search endpoint:
 
-<APIRequest
-	path="/accounts/{account_id}/websearch/search"
-	method="POST"
-	json={{
-		query: "latest Cloudflare blog posts",
-		limit: 5,
-	}}
-/>
+{/* TODO: Replace with <APIRequest /> once /accounts/{account_id}/websearch/search is published in the Cloudflare OpenAPI schema. */}
+
+```sh
+curl --request POST \
+  --url https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/websearch/search \
+  --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "query": "latest Cloudflare blog posts",
+    "limit": 5
+  }'
+```
 
 ## Request parameters
 
 | Parameter | Type     | Required | Description                                                  |
 | --------- | -------- | -------- | ------------------------------------------------------------ |
-| `query`   | `string` | Yes      | The search query.                                            |
+| `query`   | `string` | Yes      | The search query. Max length: 1,024 characters.              |
 | `limit`   | `number` | No       | Maximum number of results to return. Default `10`, max `20`. |
-|           |          |          | Query max length: 1,024 characters.                          |
 
 ## Response
 
@@ -220,16 +221,23 @@ Note: The binding uses camelCase (`requestId`, `latencyMs`, `imageUrl`, `favicon
 
 ### Result fields
 
-| Field              | Type       | Always present | Description                                                                            |
-| ------------------ | ---------- | -------------- | -------------------------------------------------------------------------------------- |
-| `url`              | `string`   | Yes            | The canonical URL of the page.                                                         |
-| `title`            | `string`   | Yes            | The page title.                                                                        |
-| `description`      | `string`   | No             | Page-level description, usually from the page's meta description tag.                  |
-| `summary`          | `string`   | No             | A summary of the page contents, if available.                                          |
-| `authors`          | `string[]` | No             | Author names associated with the page.                                                 |
-| `imageUrl`         | `string`   | No             | Preview image URL (OpenGraph or similar). REST API: `image_url`.                       |
-| `faviconUrl`       | `string`   | No             | Favicon URL for the page's domain. REST API: `favicon_url`.                            |
-| `lastModifiedDate` | `string`   | No             | ISO-8601 timestamp of when the page was last modified. REST API: `last_modified_date`. |
+Each result includes a guaranteed set of fields plus optional fields that depend on what metadata the indexed page exposes.
+
+**Always present:**
+
+| Field   | Type     | Description                    |
+| ------- | -------- | ------------------------------ |
+| `url`   | `string` | The canonical URL of the page. |
+| `title` | `string` | The page title.                |
+
+**Optional** (may be missing depending on page metadata):
+
+| Field              | Type     | Description                                                                                                           |
+| ------------------ | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `description`      | `string` | Page-level description, usually from the page's meta description tag. May be empty.                                   |
+| `imageUrl`         | `string` | Preview image URL from OpenGraph or similar. REST API: `image_url`.                                                   |
+| `faviconUrl`       | `string` | Favicon URL for the page's domain. May be missing for some sites. REST API: `favicon_url`.                            |
+| `lastModifiedDate` | `string` | ISO-8601 timestamp of when the page was last modified. Many sites do not expose this. REST API: `last_modified_date`. |
 
 ## Next steps
 
