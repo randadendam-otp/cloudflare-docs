@@ -51,22 +51,30 @@ curl -X POST \
 ```ts
 export default {
 	async fetch(request, env): Promise<Response> {
-		const { items } = await env.WEBSEARCH.search({
-			query: "how to deploy Cloudflare Workers",
-			limit: 5,
-		});
+		try {
+			const { items } = await env.WEBSEARCH.search({
+				query: "how to deploy Cloudflare Workers",
+				limit: 5,
+			});
 
-		const pages = await Promise.all(
-			items.map(async (r) => {
-				const response = await env.BROWSER.quickAction("markdown", {
-					url: r.url,
-				});
-				const content = await response.text();
-				return { title: r.title, url: r.url, content };
-			}),
-		);
+			const pages = await Promise.all(
+				items.map(async (r) => {
+					try {
+						const response = await env.BROWSER.quickAction("markdown", {
+							url: r.url,
+						});
+						const content = await response.text();
+						return { title: r.title, url: r.url, content };
+					} catch {
+						return { title: r.title, url: r.url, content: "" };
+					}
+				}),
+			);
 
-		return Response.json(pages);
+			return Response.json(pages);
+		} catch (e) {
+			return Response.json({ error: String(e) }, { status: 500 });
+		}
 	},
 } satisfies ExportedHandler<Env>;
 ```
@@ -114,22 +122,30 @@ curl -X POST \
 ```ts
 export default {
 	async fetch(request, env): Promise<Response> {
-		const { items } = await env.WEBSEARCH.search({
-			query: "Cloudflare status page",
-			limit: 5,
-		});
+		try {
+			const { items } = await env.WEBSEARCH.search({
+				query: "Cloudflare status page",
+				limit: 5,
+			});
 
-		const pages = await Promise.all(
-			items.map(async (r) => {
-				const response = await env.BROWSER.quickAction("content", {
-					url: r.url,
-				});
-				const html = await response.text();
-				return { title: r.title, url: r.url, html };
-			}),
-		);
+			const pages = await Promise.all(
+				items.map(async (r) => {
+					try {
+						const response = await env.BROWSER.quickAction("content", {
+							url: r.url,
+						});
+						const html = await response.text();
+						return { title: r.title, url: r.url, html };
+					} catch {
+						return { title: r.title, url: r.url, html: "" };
+					}
+				}),
+			);
 
-		return Response.json(pages);
+			return Response.json(pages);
+		} catch (e) {
+			return Response.json({ error: String(e) }, { status: 500 });
+		}
 	},
 } satisfies ExportedHandler<Env>;
 ```

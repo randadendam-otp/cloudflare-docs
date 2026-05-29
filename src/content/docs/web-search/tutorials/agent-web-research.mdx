@@ -42,10 +42,6 @@ You need a Cloudflare account with a Workers Paid plan. Create a new project if 
 
 <PackageManagers type="create" pkg="cloudflare@latest" args="research-agent" />
 
-Install the dependencies:
-
-<PackageManagers pkg="@cloudflare/websearch" />
-
 ## 1. Configure bindings
 
 Your Worker needs three bindings: Web Search for discovery, Browser Run for content fetching, and Workers AI for synthesis.
@@ -134,7 +130,7 @@ export default {
 			.join("\n\n---\n\n");
 
 		const aiResponse = await env.AI.run(
-			"@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+			"@cf/moonshotai/kimi-k2.5",
 			{
 				messages: [
 					{

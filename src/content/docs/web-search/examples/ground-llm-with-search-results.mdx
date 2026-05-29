@@ -31,7 +31,7 @@ RESULTS=$(curl -s -X POST \
 CONTEXT=$(echo $RESULTS | jq -r '.result.items | to_entries | map("[\(.key + 1)] \(.value.title)\n\(.value.url)\n\(.value.description)") | join("\n\n")')
 
 curl -X POST \
-  https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/@cf/meta/llama-3.3-70b-instruct \
+  https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/@cf/moonshotai/kimi-k2.5 \
   -H "Authorization: Bearer {API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d "$(jq -n --arg ctx "$CONTEXT" '{
@@ -48,25 +48,32 @@ curl -X POST \
 ```ts
 export default {
 	async fetch(request, env): Promise<Response> {
-		const query = "Cloudflare Q1 2026 earnings";
+		try {
+			const query = "Cloudflare Q1 2026 earnings";
 
-		const { items } = await env.WEBSEARCH.search({ query, limit: 5 });
+			const { items } = await env.WEBSEARCH.search({ query, limit: 5 });
 
-		const context = items
-			.map((r, i) => `[${i + 1}] ${r.title}\n${r.url}\n${r.description}`)
-			.join("\n\n");
+			const context = items
+				.map(
+					(r, i) =>
+						`[${i + 1}] ${r.title}\n${r.url}\n${r.description ?? ""}`,
+				)
+				.join("\n\n");
 
-		const answer = await env.AI.run("@cf/meta/llama-3.3-70b-instruct", {
-			messages: [
-				{
-					role: "system",
-					content: `Answer the user using these search results. Cite sources by number.\n\n${context}`,
-				},
-				{ role: "user", content: query },
-			],
-		});
+			const answer = await env.AI.run("@cf/moonshotai/kimi-k2.5", {
+				messages: [
+					{
+						role: "system",
+						content: `Answer the user using these search results. Cite sources by number.\n\n${context}`,
+					},
+					{ role: "user", content: query },
+				],
+			});
 
-		return Response.json({ answer, sources: items });
+			return Response.json({ answer, sources: items });
+		} catch (e) {
+			return Response.json({ error: String(e) }, { status: 500 });
+		}
 	},
 } satisfies ExportedHandler<Env>;
 ```

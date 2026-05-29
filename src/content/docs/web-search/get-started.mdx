@@ -58,19 +58,23 @@ If you do not have a Workers project yet, create one:
 	```ts
 	export default {
 		async fetch(request, env): Promise<Response> {
-			const { items, metadata } = await env.WEBSEARCH.search({
-				query: "latest Cloudflare blog posts",
-				limit: 5,
-			});
+			try {
+				const { items, metadata } = await env.WEBSEARCH.search({
+					query: "latest Cloudflare blog posts",
+					limit: 5,
+				});
 
-			return Response.json({
-				results: items.map((r) => ({
-					title: r.title,
-					url: r.url,
-					description: r.description,
-				})),
-				metadata,
-			});
+				return Response.json({
+					results: items.map((r) => ({
+						title: r.title,
+						url: r.url,
+						description: r.description,
+					})),
+					metadata,
+				});
+			} catch (e) {
+				return Response.json({ error: String(e) }, { status: 500 });
+			}
 		},
 	} satisfies ExportedHandler<Env>;
 	```
@@ -112,7 +116,7 @@ curl --request POST \
 | Parameter | Type     | Required | Description                                                  |
 | --------- | -------- | -------- | ------------------------------------------------------------ |
 | `query`   | `string` | Yes      | The search query. Max length: 1,024 characters.              |
-| `limit`   | `number` | No       | Maximum number of results to return. Default `10`, max `20`. |
+| `limit`   | `number` | No       | Maximum number of results to return. Min `1`, default `10`, max `20`. |
 
 ## Response
 

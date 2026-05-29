@@ -59,36 +59,44 @@ curl -X POST \
 ```ts
 export default {
 	async fetch(request, env): Promise<Response> {
-		// 1. Search for relevant pages
-		const { items } = await env.WEBSEARCH.search({
-			query: "Cloudflare AI products",
-			limit: 5,
-		});
+		try {
+			// 1. Search for relevant pages
+			const { items } = await env.WEBSEARCH.search({
+				query: "Cloudflare AI products",
+				limit: 5,
+			});
 
-		// 2. Extract structured data from each result using Browser Run /json
-		const extracted = await Promise.all(
-			items.map(async (r) => {
-				const response = await env.BROWSER.quickAction("json", {
-					url: r.url,
-					prompt: "Extract product information",
-					response_format: {
-						type: "json_schema",
-						schema: {
-							type: "object",
-							properties: {
-								product_name: { type: "string" },
-								description: { type: "string" },
-								use_case: { type: "string" },
+			// 2. Extract structured data from each result using Browser Run /json
+			const extracted = await Promise.all(
+				items.map(async (r) => {
+					try {
+						const response = await env.BROWSER.quickAction("json", {
+							url: r.url,
+							prompt: "Extract product information",
+							response_format: {
+								type: "json_schema",
+								schema: {
+									type: "object",
+									properties: {
+										product_name: { type: "string" },
+										description: { type: "string" },
+										use_case: { type: "string" },
+									},
+								},
 							},
-						},
-					},
-				});
-				const data = await response.json();
-				return { source: r.url, data };
-			}),
-		);
+						});
+						const data = await response.json();
+						return { source: r.url, data };
+					} catch {
+						return { source: r.url, data: null };
+					}
+				}),
+			);
 
-		return Response.json(extracted);
+			return Response.json(extracted);
+		} catch (e) {
+			return Response.json({ error: String(e) }, { status: 500 });
+		}
 	},
 } satisfies ExportedHandler<Env>;
 ```
