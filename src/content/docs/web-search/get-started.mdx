@@ -113,6 +113,8 @@ curl --request POST \
 
 ## Request parameters
 
+Both the Workers Binding and REST API accept the same parameters:
+
 | Parameter | Type     | Required | Description                                                  |
 | --------- | -------- | -------- | ------------------------------------------------------------ |
 | `query`   | `string` | Yes      | The search query. Max length: 1,024 characters.              |
@@ -120,7 +122,7 @@ curl --request POST \
 
 ## Response
 
-The binding returns a `WebSearchResponse` object with items and metadata:
+Both methods return the same data. The Workers Binding returns a `WebSearchResponse` object directly:
 
 ```json output collapse={11-29}
 {
@@ -223,7 +225,7 @@ The REST API wraps this in the standard Cloudflare v4 response envelope with sna
 
 Note: The binding uses camelCase (`requestId`, `latencyMs`, `imageUrl`, `faviconUrl`, `lastModifiedDate`) while the REST API uses snake_case (`request_id`, `latency_ms`, `image_url`, `favicon_url`, `last_modified_date`).
 
-### Result fields
+## Result fields
 
 Each result includes a guaranteed set of fields plus optional fields that depend on what metadata the indexed page exposes.
 

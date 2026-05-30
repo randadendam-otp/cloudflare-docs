@@ -11,6 +11,8 @@ products:
 
 import { Tabs, TabItem } from "~/components";
 
+LLMs have a training data cutoff date. Any information published after that date is not available to the model, so questions about recent events, product updates, or current data will produce outdated or hallucinated answers. Grounding solves this by injecting current information into the prompt so the model can answer using real-time context instead of relying on its training data alone.
+
 This example passes search result metadata (titles, URLs, and descriptions) directly to a model as context. The LLM can use this to produce a response grounded in real-time search results, with citations back to the source URLs.
 
 This is the lightweight version of grounding: no page content is fetched, so it is fast and uses no [Browser Run](/browser-run/) quota. The tradeoff is that the LLM only sees short descriptions, not full articles. For queries where titles and snippets provide enough signal (trending topics, factual lookups, news summaries), this works well.
